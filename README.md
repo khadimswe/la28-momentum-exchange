@@ -4,7 +4,7 @@
 
 A National Momentum generator for sports featuring at the LA28 Olympic and Paralympic Games. The first prediction engine that treats Olympic and Paralympic sports as equal assets, powered by Gemini search grounding and a transparent 4-factor momentum formula.
 
-Built for the Vibe Code for Gold hackathon — Challenge 3: The Road to LA28 Games Bracket.
+Built for the Team USA x Google Cloud Hackathon — Challenge 3: The Road to LA28 Games Bracket.
 
 ---
 
