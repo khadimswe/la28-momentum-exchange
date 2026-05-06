@@ -1,0 +1,4 @@
+// Paste into Firebase Console → Firestore → Rules alongside your existing match blocks:
+match /predictions/{document=**} {
+  allow read, write: if true;
+}
