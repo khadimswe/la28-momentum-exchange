@@ -193,6 +193,77 @@ Building with real Gemini search grounding revealed several patterns:
 - Trajectory scoring revealed a pattern: LA28 debut sports (Flag Football, Cricket, Lacrosse) and Paralympic sports with newer global federations score highest because their growth slopes are steepest.
 
 ---
+## Reproducible Testing
+
+### Live App
+View the deployed app: https://la28-momentum-exchange-942244923042.us-central1.run.app
+
+No login or API key required — all features are publicly accessible.
+
+### Test the Core Flow (3 minutes)
+
+**1. Browse the Market**
+- Navigate to the Market page
+- Verify all 59 LA28 sports load (36 Olympic, 23 Paralympic)
+- Click any sport card to see the full 4-factor momentum breakdown with cited sources
+- Try category tabs (Aquatic, Combat, Team, etc.) to filter
+
+**2. Test the Agentic Chat (Ask the Market)**
+- From any page, open Ask the Market
+- Try this question: "Which Paralympic sports should America be watching for LA28?"
+- Verify the visible reasoning chain plays: searching → reading momentum → cross-referencing → answering
+- Confirm cited sources appear with the answer
+- Click any cited sport card link to navigate to that card on Market
+
+**3. Build a Portfolio**
+- Navigate to Portfolio page
+- Lock in 3-5 prediction picks (mix Olympic and Paralympic)
+- Submit with any email address
+- Verify FIFA-style prediction cards render in cream aesthetic
+- Confirm rarity tier examples display (Mythic Gold, Rare Silver, Common Bronze)
+
+**4. View National Insights**
+- Return to Home page
+- Confirm National Momentum dashboard loads
+- Verify Olympic vs Paralympic trend chart renders
+- Check news cards display with cited Gemini-grounded sources
+
+### Run Locally
+
+Requirements:
+- Node.js 22.0+ 
+- A Google AI Studio API key (free tier sufficient): https://aistudio.google.com/apikey
+- A Firebase project with Firestore enabled
+
+Setup:
+```bash
+git clone https://github.com/khadimswe/la28-momentum-exchange.git
+cd la28-momentum-exchange
+npm install
+```
+
+Create a `.env` file in the project root:
+VITE_GEMINI_API_KEY=your_gemini_key_here
+VITE_FIREBASE_API_KEY=your_firebase_key
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+
+Start the dev server:
+```bash
+npm run dev
+```
+
+App runs at http://localhost:5173
+
+### Verify Gemini Integration
+- Open browser DevTools → Network tab
+- Trigger any sport card narrative load or Ask the Market query
+- Confirm requests to `generativelanguage.googleapis.com` with successful responses
+
+### Verify Firestore Caching
+- First load of any sport will trigger Gemini API call (~3-5 second response)
+- Refresh the page or revisit the same sport
+- Subsequent loads serve from Firestore cache (instant, no API call in Network tab)
 
 ## License
 
