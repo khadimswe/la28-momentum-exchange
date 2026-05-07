@@ -209,7 +209,7 @@ No login or API key required — all features are publicly accessible.
 - Try category tabs (Aquatic, Combat, Team, etc.) to filter
 
 **2. Test the Agentic Chat (Ask the Market)**
-- From any page, open Ask the Market
+- In Sports Market, Ask the Market
 - Try this question: "Which Paralympic sports should America be watching for LA28?"
 - Verify the visible reasoning chain plays: searching → reading momentum → cross-referencing → answering
 - Confirm cited sources appear with the answer
@@ -217,9 +217,9 @@ No login or API key required — all features are publicly accessible.
 
 **3. Build a Portfolio**
 - Navigate to Portfolio page
-- Lock in 3-5 prediction picks (mix Olympic and Paralympic)
+- Lock in 1-10 prediction picks (mix Olympic and Paralympic)
 - Submit with any email address
-- Verify FIFA-style prediction cards render in cream aesthetic
+- Verify FIFA-style prediction cards render in gold aesthetic
 - Confirm rarity tier examples display (Mythic Gold, Rare Silver, Common Bronze)
 
 **4. View National Insights**
