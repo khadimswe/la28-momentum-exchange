@@ -62,69 +62,40 @@ function cleanNewsStories(stories) {
 }
 
 async function fetchTopNewsFromGemini() {
-  const sportList = SPORTS.map((s) => s.name).join(', ')
-  const prompt = `You MUST use Google Search to find recent articles. Search results should be from the last 30 days.
+  const prompt = `Search the web for 2 RECENT real news articles from the last 14 days about Team USA Olympic or Paralympic sports preparation for LA28 Games.
 
-Search the web for the 2 most recent and significant TEAM USA news stories from the last 7 days that affect momentum heading into the LA28 Games. Include both Olympic and Paralympic sports if possible.
-
-CRITICAL TERMINOLOGY RULES (NON-NEGOTIABLE):
-- Use official sport names ONLY. NEVER use NGB (National Governing Body) names. 
-  Examples of FORBIDDEN: "USA Badminton", "USA Swimming", "US Track & Field", "USA Wrestling"
-  Examples of CORRECT: "badminton program", "swimming program", "Team USA badminton"
-- Use "Athletics" (NEVER "Track & Field"). The sport is called Athletics.
-- For LA28: use "LA28 Games" or "LA28 Olympic and Paralympic Games"
-- For other Games: use "Olympic Games [City] [Year]" format (e.g. "Olympic Games Paris 2024", NOT just "2024 Olympics" or "Paris 2024")
-- For Winter Games: "Olympic Winter Games [City] [Year]" (e.g. "Olympic Winter Games Beijing 2022")
-- NEVER use "former Olympian" or "past Olympian" — once an Olympian/Paralympian, always one
-- Reference medals and placements (1st, 2nd, 3rd) only
-- NEVER reference finish times, scores, distances, or measurement values  
+REQUIRED COMPLIANCE RULES (must follow):
 - Use Team USA / US-scope only
-- Do not name specific athletes by name
-- Use conditional phrasing throughout
+- DO NOT mention finish times, scores, distances, or measurement values
+- DO NOT include corporate sponsorship or banking news (no Nike, JPMorgan, Visa, etc.)
+- Use proper Games terminology: "LA28 Games", "Olympic Games Paris 2024", "Olympic Winter Games Beijing 2022"
+- Never use "former Olympian" or "past Olympian"
+- Use official sport names (Athletics not Track and Field, Swimming not USA Swimming)
 
-EXCLUSION RULES (CRITICAL):
-- DO NOT surface news primarily about corporate sponsorships, partnerships, financial deals, or banking arrangements with Team USA, USOPC, or LA28
-- DO NOT mention specific corporate brand names (JPMorgan, Nike, Coca-Cola, Visa, etc.) in headlines or descriptions
-- Focus instead on:
-  * Athletic program developments
-  * Qualifying events and trials
-  * Federation news (NGB certifications, governance changes)
-  * Sport debut/inclusion announcements
-  * Training and program milestones
-  * Roster and competition results (medals/placements only)
-- The story should be about Team USA's competitive trajectory, not commercial relationships
+ALLOWED CONTENT:
+- Real news about LA28 preparation
+- Federation announcements and program updates
+- Trial results, championship outcomes (medals/placements only)
+- Sport debuts at LA28
+- Roster announcements at the team or program level
+- Even if winter Olympic news comes up, you can include it IF it ties to broader Team USA athletic momentum and isn't focused on individual athletes
 
-CRITICAL RULES:
-- Team USA / US-scope only. Do not surface international athlete stories.
-- Reference medals and placements only. NEVER reference specific finish times, scores, or measurement values.
-- Do NOT name specific athletes. Use program-level language ("Team USA Para Athletics", "Wheelchair Rugby program").
-- Stories should focus on programs, federations, qualifications, milestones — not individual athlete performances.
+ATHLETE REFERENCES:
+- You CAN reference athletes generically when the news genuinely covers it (e.g. "an Olympian on the roster")
+- You CAN mention "Olympic medalist" or "world championship medalist" if the article does
+- AVOID identifying specific people through unique descriptors (e.g. "the only American to win 5 Olympic medals in Para Swimming")
+- Strip athlete names if they appear
 
-For each story, return:
-- The sport name (must match a sport from this list: ${sportList})
-- The sport type (Olympic or Paralympic)
-- A paraphrased headline focusing on the program-level story (do not name athletes)
-- A 2-line description under 25 words (no athlete names, no finish times)
-- The source publication name
-- An estimated momentum impact (1-10 positive, or negative for cooling)
-- How long ago published
+For each story return:
+- sport: name of the sport
+- type: "Olympic" or "Paralympic"
+- headline: the actual headline (paraphrased to remove any athlete names)
+- description: 2-line summary under 30 words
+- source: real publication name (Reuters, AP, USA Today, ESPN, Team USA, Olympics.com, Paralympic.org, etc.)
+- impact: number 1-10 positive, or negative
+- timeAgo: relative time
 
-DO NOT include URLs in your response. Sources will be added separately from search grounding.
-
-Return ONLY a JSON array:
-[
-  {
-    "sport": "Sport Name",
-    "type": "Olympic" or "Paralympic",
-    "headline": "string",
-    "description": "string",
-    "source": "publication name",
-    "impact": number,
-    "timeAgo": "string"
-  }
-]
-
-Use conditional phrasing.`
+Return ONLY a JSON array. Make these REAL articles you find via search grounding.`
 
   const key = import.meta.env.VITE_GEMINI_API_KEY
   const response = await fetch(
@@ -198,38 +169,40 @@ Use conditional phrasing.`
     parsed.map((p) => ({ source: p?.source, url: p?.url })),
   )
 
+  // Just filter corporate sponsorship news
   const corporateKeywords = [
     'jpmorgan',
     'jp morgan',
     'chase bank',
-    'nike',
+    'nike sponsorship',
     'coca-cola',
-    'coke',
-    'visa',
+    'visa partnership',
     'mastercard',
     'samsung',
     'panasonic',
-    'toyota',
-    'p&g',
-    'procter',
-    'airbnb',
-    'omega',
-    'allianz',
-    'intel',
-    'atos',
-    'bridgestone',
-    'deloitte',
-    'ufc',
-    'wwe',
-    'red bull',
-    'monster energy',
-    'gatorade',
-    'powerade',
+    'toyota partnership',
+    'sponsorship deal',
+    'official sponsor',
+    'official bank',
   ]
 
   const filteredNews = parsed.filter((item) => {
-    const fullText = `${item?.headline || ''} ${item?.description || ''} ${item?.source || ''}`.toLowerCase()
+    const fullText = `${item?.headline || ''} ${item?.description || ''}`.toLowerCase()
     return !corporateKeywords.some((keyword) => fullText.includes(keyword))
+  })
+
+  // Strip any athlete names that snuck through with regex (common "Name Lastname" patterns)
+  const stripNames = (text) => {
+    if (!text) return text
+    return String(text)
+      .replace(/\b[A-Z][a-z]+ [A-Z][a-z]+'s\b/g, "the athlete's")
+      .replace(/\b[A-Z][a-z]+ [A-Z][a-z]+ won\b/g, 'the athlete won')
+      .replace(/\b[A-Z][a-z]+ [A-Z][a-z]+ secured\b/g, 'the athlete secured')
+  }
+
+  filteredNews.forEach((item) => {
+    item.headline = stripNames(item?.headline)
+    item.description = stripNames(item?.description)
   })
 
   let chosen = filteredNews
@@ -275,12 +248,14 @@ export async function fetchTopNews(options = {}) {
     const cached = await getDoc(docRef)
     if (cached.exists()) {
       const d = cached.data()
-      if (cacheIsFresh(d.generatedAt) && Array.isArray(d.stories)) {
+      // PRODUCTION: always use cached news, never refetch from Gemini
+      if (Array.isArray(d.stories) && d.stories.length > 0) {
         return cleanNewsStories(d.stories)
       }
     }
   }
 
+  console.log('No cached news found, falling back to Gemini fetch')
   const stories = await fetchTopNewsFromGemini()
   const cleanedNews = cleanNewsStories(stories)
   await setDoc(docRef, {

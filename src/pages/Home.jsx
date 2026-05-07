@@ -27,18 +27,65 @@ function formatChartNumber(v) {
   return roundMomentum1(v).toFixed(1)
 }
 
-function sportAbbr(name) {
-  const words = String(name || '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-  if (words.length === 0) return '--'
-  if (words[0].toLowerCase() === 'para') {
-    const second = words[1]?.[0] ?? ''
-    return `P${second}`.toUpperCase()
+const getNewsAbbreviation = (sportName) => {
+  if (!sportName) return 'L28'
+
+  // Strip everything after first opening paren
+  const cleanName = sportName.split('(')[0].trim()
+
+  // Special cases for non-sport categorical news
+  if (
+    cleanName.toLowerCase().includes('multi-sport') ||
+    cleanName.toLowerCase().includes('multi sport')
+  ) {
+    return 'LA28'
   }
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
-  return `${words[0][0]}${words[1][0]}`.toUpperCase()
+  if (cleanName.toLowerCase().includes('general')) {
+    return 'LA28'
+  }
+
+  // Take first letter of each word, max 3 chars
+  const words = cleanName.split(/\s+/).filter((w) => w.length > 0)
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase()
+  }
+  return words
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+}
+
+function getShortSportLabel(sportName) {
+  if (!sportName) return 'LA28 Update'
+
+  const s = String(sportName)
+  const hasParens = s.includes('(')
+  if (!hasParens) return s
+
+  const beforeParen = s.split('(')[0].trim()
+  const lower = beforeParen.toLowerCase()
+  const isTooLong = s.length > 30
+
+  if (isTooLong) {
+    if (lower.includes('multi-sport') || lower.includes('multi sport')) return 'Multi-sport'
+    return 'LA28 Update'
+  }
+
+  return beforeParen || 'LA28 Update'
+}
+
+function getShortImpactSportText(sportName, impact) {
+  const n = Math.abs(Number(impact) || 0)
+  const s = String(sportName || '')
+  if (s.includes('(')) {
+    const beforeParen = s.split('(')[0].trim().toLowerCase()
+    if (beforeParen.includes('multi-sport') || beforeParen.includes('multi sport')) {
+      return `↑ Pushed multiple sports +${n} momentum`
+    }
+    return `↑ Pushed LA28 momentum +${n}`
+  }
+  return `↑ Pushed ${sportName} +${n} momentum`
 }
 
 function openUrl(url) {
@@ -68,8 +115,6 @@ export default function Home() {
   const [tick, setTick] = useState(0)
   const [topNews, setTopNews] = useState([])
   const [newsLoading, setNewsLoading] = useState(true)
-  const [showSurgeAlert, setShowSurgeAlert] = useState(false)
-  const [surgeEntered, setSurgeEntered] = useState(false)
   const [liveNational, setLiveNational] = useState(0)
   const [liveNationalDir, setLiveNationalDir] = useState(0)
 
@@ -127,25 +172,12 @@ export default function Home() {
     return [...SPORTS].sort((a, b) => scoreFor(b) - scoreFor(a))[0] ?? null
   }, [scoreFor])
 
+  const hasTopNews = Array.isArray(topNews) && topNews.length > 0
+
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1000)
     return () => clearInterval(id)
   }, [])
-
-  useEffect(() => {
-    try {
-      const dismissed = sessionStorage.getItem('surgeAlertDismissed') === '1'
-      if (!dismissed) setShowSurgeAlert(true)
-    } catch {
-      setShowSurgeAlert(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!showSurgeAlert) return
-    const id = requestAnimationFrame(() => setSurgeEntered(true))
-    return () => cancelAnimationFrame(id)
-  }, [showSurgeAlert])
 
   useEffect(() => {
     let cancelled = false
@@ -222,6 +254,10 @@ export default function Home() {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
         }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
         @keyframes home-break-dot {
           0%, 100% { opacity: 0.4; }
           50% { opacity: 1; }
@@ -244,53 +280,6 @@ export default function Home() {
           color: #6b5b3f;
           margin: 0 0 12px;
         }
-        .home-surge-banner {
-          background: linear-gradient(90deg, #BF0D3E 0%, #8B0A2E 100%);
-          color: #fff;
-          font-weight: 600;
-          font-size: 14px;
-          padding: 12px 24px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          transform: translateX(100%);
-          transition: transform 600ms ease;
-          margin-bottom: 16px;
-        }
-        .home-surge-banner--entered {
-          transform: translateX(0);
-        }
-        .home-surge-left {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          min-width: 0;
-        }
-        
-        .home-surge-text {
-          min-width: 0;
-          line-height: 1.25;
-        }
-        .home-surge-dismiss {
-          border: none;
-          background: rgba(255, 255, 255, 0.12);
-          color: #fff;
-          width: 28px;
-          height: 28px;
-          border-radius: 999px;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          line-height: 1;
-          flex-shrink: 0;
-        }
-        .home-surge-dismiss:hover {
-          background: rgba(255, 255, 255, 0.18);
-        }
         .home-news-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -310,6 +299,18 @@ export default function Home() {
           padding: 16px;
           box-shadow: 0 1px 2px rgba(50, 40, 20, 0.04);
           position: relative;
+        }
+        .home-news-card--skeleton {
+          background: linear-gradient(90deg, #FBF8F1 0%, #F5EFE0 50%, #FBF8F1 100%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s ease-in-out infinite;
+          overflow: hidden;
+        }
+        .home-news-skeleton-text {
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(10, 22, 40, 0.45);
+          margin-top: 8px;
         }
         .home-breaking-badge {
           position: absolute;
@@ -634,63 +635,40 @@ export default function Home() {
 
       <div className="home-page">
         <div className="home-container">
-          {showSurgeAlert && topSport && (
-            <div
-              className={`home-surge-banner${surgeEntered ? ' home-surge-banner--entered' : ''}`}
-              role="status"
-            >
-              <div className="home-surge-left">
-                <span className="home-surge-fire" aria-hidden="true">
-                  🔥
-                </span>
-                <div className="home-surge-text">
-                  <strong>SURGE ALERT</strong> — {topSport.name} is the highest momentum sport in the
-                  entire LA28 program at {Math.round(scoreFor(topSport))}/100
-                </div>
-              </div>
-              <button
-                type="button"
-                className="home-surge-dismiss"
-                aria-label="Dismiss"
-                onClick={() => {
-                  setShowSurgeAlert(false)
-                  try {
-                    sessionStorage.setItem('surgeAlertDismissed', '1')
-                  } catch {
-                    // ignore
-                  }
-                }}
-              >
-                ×
-              </button>
-            </div>
-          )}
-
           <section aria-labelledby="home-progress-heading">
             <h2 id="home-progress-heading" className="home-section-label">
               Latest exciting progress
             </h2>
             <div className="home-news-grid">
               {newsLoading &&
+                !hasTopNews &&
                 [0, 1].map((i) => (
-                  <article key={i} className="home-news-card" aria-hidden="true">
+                  <article
+                    key={i}
+                    className="home-news-card home-news-card--skeleton"
+                    aria-label="Loading momentum news"
+                  >
                     <div className="home-news-thumb home-news-thumb--oly">--</div>
                     <div className="home-news-body">
                       <div className="home-news-skel-line" style={{ width: '45%' }} />
                       <div className="home-news-skel-line home-news-skel-line--title" />
                       <div className="home-news-skel-line home-news-skel-line--title" style={{ width: '78%' }} />
                       <div className="home-news-skel-line" style={{ width: '58%' }} />
+                      <div className="home-news-skeleton-text">Loading momentum news...</div>
                     </div>
                   </article>
                 ))}
 
-              {!newsLoading &&
+              {hasTopNews &&
                 topNews.slice(0, 2).map((item, idx) => {
                   const clickable = Boolean(item.url)
                   const cardClass = clickable
                     ? 'home-news-card home-news-card--clickable'
                     : 'home-news-card'
                   const key = `${item.sport}-${item.url ?? item.headline}`
+                  const abbr = getNewsAbbreviation(item.sport)
+                  const fontSize = abbr.length > 3 ? '16px' : '24px'
+                  const shortSportLabel = getShortSportLabel(item.sport)
 
                   return (
                     <article
@@ -733,8 +711,9 @@ export default function Home() {
                             : 'home-news-thumb--oly'
                         }`}
                         aria-hidden="true"
+                        style={{ fontSize }}
                       >
-                        {sportAbbr(item.sport)}
+                        {abbr}
                       </div>
                       <div className="home-news-body">
                         <span className="home-news-source">
@@ -748,7 +727,9 @@ export default function Home() {
                           {item.description}
                         </p>
                         <span className="home-news-impact">
-                          ↑ Pushed {item.sport} +{Math.abs(Number(item.impact) || 0)} momentum
+                          {item.sport?.includes('(')
+                            ? getShortImpactSportText(item.sport, item.impact)
+                            : `↑ Pushed ${shortSportLabel} +${Math.abs(Number(item.impact) || 0)} momentum`}
                         </span>
                       </div>
                     </article>
