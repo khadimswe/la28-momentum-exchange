@@ -22,13 +22,13 @@ The app is built around a single thesis: **Paralympic sports are equally importa
 A single composite momentum number representing where Team USA stands across all 59 sports. Live countdown to the LA28 Games. Recent news with cited sources from Gemini search grounding. Olympic vs Paralympic momentum trajectory chart showing 7-day movement.
 
 ### Market — All 59 Sports Equally Weighted
-Premium FIFA-style sport cards organized by 8 categories (Aquatic, Athletics, Combat, Precision, Team, Individual, Gymnastics, Cycling). Each card shows momentum score, trajectory, real-time community allocation versus data-driven score, and a Gemini-generated narrative. Click any card for full reasoning breakdown across the 4-factor formula.
+Premium Collectible-style sport cards organized by 8 categories (Aquatic, Athletics, Combat, Precision, Team, Individual, Gymnastics, Cycling). Each card shows momentum score, trajectory, real-time community allocation versus data-driven score, and a Gemini-generated narrative. Click any card for full reasoning breakdown across the 4-factor formula.
 
 ### Ask the Market — Agentic Q&A
 A chat interface where fans ask natural language questions about LA28 sports. Watch Gemini work in real time through a visible reasoning chain: searching news, reading momentum data, cross-referencing trajectory, then synthesizing an answer with cited sources and direct links to relevant sport cards.
 
 ### Portfolio — Lock-In Predictions
-Up to 10 prediction locks per fan. Browse Market, click lock on sports you believe in, then commit them with a single email confirmation. Each locked prediction generates a FIFA-style collectible card in cream aesthetic. Three rarity tiers (Mythic Gold, Rare Silver, Common Bronze) earned automatically based on where the sport ranks at LA28 in 2028.
+Up to 10 prediction locks per fan. Browse Market, click lock on sports you believe in, then commit them with a single email confirmation. Each locked prediction generates a Collectible-style card in cream aesthetic. Three rarity tiers (Mythic Gold, Rare Silver, Common Bronze) earned automatically based on where the sport ranks at LA28 in 2028.
 
 ---
 
@@ -219,7 +219,7 @@ No login or API key required — all features are publicly accessible.
 - Navigate to Portfolio page
 - Lock in 1-10 prediction picks (mix Olympic and Paralympic)
 - Submit with any email address
-- Verify FIFA-style prediction cards render in gold aesthetic
+- Verify Collectible-style prediction cards render in gold aesthetic
 - Confirm rarity tier examples display (Mythic Gold, Rare Silver, Common Bronze)
 
 **4. View National Insights**
